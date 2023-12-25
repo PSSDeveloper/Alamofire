@@ -27,13 +27,14 @@ import UIKit
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDelegate {
     // MARK: - Properties
-
+    //写出window属性，方便后续在didFinishLaunchingWithOptions方法中使用
     var window: UIWindow?
 
     // MARK: - UIApplicationDelegate
 
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+        ///在Main中可以看到，为了兼容iPad上的显示，window的根视图控制器是UISplitViewController类型的
         let splitViewController = window!.rootViewController as! UISplitViewController
         let navigationController = splitViewController.viewControllers.last as! UINavigationController
         navigationController.topViewController!.navigationItem.leftBarButtonItem = splitViewController.displayModeButtonItem

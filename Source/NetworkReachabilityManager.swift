@@ -34,6 +34,7 @@ import SystemConfiguration
 /// network requests when a connection is established. It should not be used to prevent a user from initiating a network
 /// request, as it's possible that an initial request may be required to establish reachability.
 open class NetworkReachabilityManager {
+    ///此处定义NetworkReachabilityStatus枚举类型，并根据SCNetworkReachabilityFlags的值，进行初始化
     /// Defines the various states of network reachability.
     public enum NetworkReachabilityStatus {
         /// It is unknown whether the network is reachable.
@@ -65,7 +66,7 @@ open class NetworkReachabilityManager {
     /// A closure executed when the network reachability status changes. The closure takes a single argument: the
     /// network reachability status.
     public typealias Listener = (NetworkReachabilityStatus) -> Void
-
+    /// 定义一个名为default的NetworkReachabilityManager单例
     /// Default `NetworkReachabilityManager` for the zero address and a `listenerQueue` of `.main`.
     public static let `default` = NetworkReachabilityManager()
 
@@ -134,6 +135,7 @@ open class NetworkReachabilityManager {
     /// Reachability treats the 0.0.0.0 address as a special token that causes it to monitor the general routing
     /// status of the device, both IPv4 and IPv6.
     public convenience init?() {
+        ///使用0.0.0.0作为测试地址，实例化reachability对象
         var zero = sockaddr()
         zero.sa_len = UInt8(MemoryLayout<sockaddr>.size)
         zero.sa_family = sa_family_t(AF_INET)
@@ -171,7 +173,7 @@ open class NetworkReachabilityManager {
             state.listenerQueue = queue
             state.listener = listener
         }
-
+        //实例化一个弱引用manager的对象
         let weakManager = WeakManager(manager: self)
 
         var context = SCNetworkReachabilityContext(
@@ -234,14 +236,17 @@ open class NetworkReachabilityManager {
     ///
     /// - Parameter flags: `SCNetworkReachabilityFlags` to use to calculate the status.
     func notifyListener(_ flags: SCNetworkReachabilityFlags) {
+        ///根据flags获取最新的状态值
         let newStatus = NetworkReachabilityStatus(flags)
 
         mutableState.write { state in
+            ///保证状态值和上次的状态值是不同的，此处能用!=判断的原因是，作者扩展了该枚举类型遵守Equatable协议
             guard state.previousStatus != newStatus else { return }
 
             state.previousStatus = newStatus
 
             let listener = state.listener
+            //在指定的监听队列上异步执行状态改变通知
             state.listenerQueue?.async { listener?(newStatus) }
         }
     }
@@ -257,8 +262,10 @@ open class NetworkReachabilityManager {
 
 // MARK: -
 
+//扩展枚举遵守Equatable协议
 extension NetworkReachabilityManager.NetworkReachabilityStatus: Equatable {}
-
+//对SCNetworkReachabilityFlags进行扩展，方便获取相关属性
+//contains()方法是集合的一个方法，包含返回true，否则false
 extension SCNetworkReachabilityFlags {
     var isReachable: Bool { contains(.reachable) }
     var isConnectionRequired: Bool { contains(.connectionRequired) }

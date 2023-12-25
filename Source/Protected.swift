@@ -23,12 +23,12 @@
 //
 
 import Foundation
-
+///定义一个私有的Lock协议，只有两个函数
 private protocol Lock {
     func lock()
     func unlock()
 }
-
+///对上述定义的Lock协议进行扩展，增加两个方法around
 extension Lock {
     /// Executes a closure returning a value while acquiring the lock.
     ///
@@ -52,6 +52,7 @@ extension Lock {
 #if canImport(Darwin)
 /// An `os_unfair_lock` wrapper.
 final class UnfairLock: Lock {
+    ///os_unfair_lock_t这个是iOS系统提供的一个锁
     private let unfairLock: os_unfair_lock_t
 
     init() {
@@ -80,7 +81,7 @@ extension NSLock: Lock {}
 #endif
 
 /// A thread-safe wrapper around a value.
-@dynamicMemberLookup
+@dynamicMemberLookup //动态成员查找关键字
 final class Protected<Value> {
     #if canImport(Darwin)
     private let lock = UnfairLock()
@@ -120,12 +121,12 @@ final class Protected<Value> {
     func write(_ value: Value) {
         write { $0 = value }
     }
-
+    ///动态创建属性
     subscript<Property>(dynamicMember keyPath: WritableKeyPath<Value, Property>) -> Property {
         get { lock.around { value[keyPath: keyPath] } }
         set { lock.around { value[keyPath: keyPath] = newValue } }
     }
-
+    ///动态
     subscript<Property>(dynamicMember keyPath: KeyPath<Value, Property>) -> Property {
         lock.around { value[keyPath: keyPath] }
     }

@@ -31,7 +31,7 @@ class MasterViewController: UITableViewController {
     @IBOutlet var titleImageView: UIImageView!
 
     var detailViewController: DetailViewController?
-
+    //定义一个监控设备网络变化的私有变量
     private var reachability: NetworkReachabilityManager!
 
     // MARK: - View Lifecycle
@@ -41,7 +41,7 @@ class MasterViewController: UITableViewController {
 
         navigationItem.titleView = titleImageView
         clearsSelectionOnViewWillAppear = true
-
+        //给变量赋值，并开启监控
         reachability = NetworkReachabilityManager.default
         monitorReachability()
     }
@@ -52,6 +52,7 @@ class MasterViewController: UITableViewController {
         if
             let navigationController = segue.destination as? UINavigationController,
             let detailViewController = navigationController.topViewController as? DetailViewController {
+            ///定义一个内部函数，根据要跳转的segue，生成所需的Request
             func requestForSegue(_ segue: UIStoryboardSegue) -> Request? {
                 switch segue.identifier! {
                 case "GET":
