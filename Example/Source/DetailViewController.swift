@@ -32,8 +32,10 @@ class DetailViewController: UITableViewController {
 
     var request: Request? {
         didSet {
+            //取消上一个request
             oldValue?.cancel()
-
+            //自定义描述
+            //Request遵循CustomStringConvertible协议，并重写了description属性的Get方法
             title = request?.description
             request?.onURLRequestCreation { [weak self] _ in
                 self?.title = self?.request?.description
@@ -78,9 +80,9 @@ class DetailViewController: UITableViewController {
 
         refreshControl?.isHidden = false
         refreshControl?.beginRefreshing()
-
+        //记录请求开始时间，用于处理请求耗时
         let start = CACurrentMediaTime()
-
+        //定义返回处理逻辑
         let requestComplete: (HTTPURLResponse?, Result<String, AFError>) -> Void = { response, result in
             let end = CACurrentMediaTime()
             self.elapsedTime = end - start
@@ -105,7 +107,8 @@ class DetailViewController: UITableViewController {
             self.tableView.reloadData()
             self.refreshControl?.endRefreshing()
         }
-
+        //在此处将DownloadRequest和DataRequest区分开来
+        //调用代码，进行请求和序列化逻辑
         if let request = request as? DataRequest {
             request.responseString { response in
                 requestComplete(response.response, response.result)

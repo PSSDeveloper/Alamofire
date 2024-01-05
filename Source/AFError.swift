@@ -27,7 +27,7 @@ import Foundation
 #if canImport(Security)
 import Security
 #endif
-
+///该文件是Alamofire框架中所涉及到的错误的定义，其中AFError遵守Error协议
 /// `AFError` is the error type returned by Alamofire. It encompasses a few different types of errors, each with
 /// their own associated reasons.
 public enum AFError: Error {
@@ -228,7 +228,7 @@ public enum AFError: Error {
     /// `URLRequest` failed validation.
     case urlRequestValidationFailed(reason: URLRequestValidationFailureReason)
 }
-
+///对Error协议进行扩展
 extension Error {
     /// Returns the instance cast as an `AFError`.
     public var asAFError: AFError? {

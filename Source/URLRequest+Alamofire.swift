@@ -23,7 +23,7 @@
 //
 
 import Foundation
-
+///URLRequest的一个扩展，将其httpMethod属性与Alamofire的HTTPMethod属性进行转换
 extension URLRequest {
     /// Returns the `httpMethod` as Alamofire's `HTTPMethod` type.
     public var method: HTTPMethod? {
@@ -32,6 +32,7 @@ extension URLRequest {
     }
 
     public func validate() throws {
+        ///对get类型的请求进行验证，httpBody不能有数据
         if method == .get, let bodyData = httpBody {
             throw AFError.urlRequestValidationFailed(reason: .bodyDataInGETRequest(bodyData))
         }

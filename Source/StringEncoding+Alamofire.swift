@@ -30,6 +30,7 @@ extension String.Encoding {
     /// - Notes: These mappings match those [provided by CoreFoundation](https://opensource.apple.com/source/CF/CF-476.18/CFStringUtilities.c.auto.html)
     ///
     /// - Parameter name: IANA charset name.
+    /// 对String.Encoding扩展一个可空的初始化方法
     init?(ianaCharsetName name: String) {
         switch name.lowercased() {
         case "utf-8":

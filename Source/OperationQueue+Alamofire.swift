@@ -34,6 +34,7 @@ extension OperationQueue {
     ///   - underlyingQueue: Underlying  `DispatchQueue`. `nil` by default.
     ///   - name:                        Name for the queue. `nil` by default.
     ///   - startSuspended:              Whether the queue starts suspended. `false` by default.
+    ///    扩展了一个便利初始化函数，提供相应的属性赋值
     convenience init(qualityOfService: QualityOfService = .default,
                      maxConcurrentOperationCount: Int = OperationQueue.defaultMaxConcurrentOperationCount,
                      underlyingQueue: DispatchQueue? = nil,

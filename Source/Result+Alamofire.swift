@@ -25,6 +25,7 @@
 import Foundation
 
 /// Default type of `Result` returned by Alamofire, with an `AFError` `Failure` type.
+/// 对系统Result起别名叫做AFResult，枚举
 public typealias AFResult<Success> = Result<Success, AFError>
 
 // MARK: - Internal APIs

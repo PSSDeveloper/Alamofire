@@ -72,11 +72,12 @@ public struct HTTPHeaders {
     ///
     /// - Parameter header: The `HTTPHeader` to update or append.
     public mutating func update(_ header: HTTPHeader) {
+        //查找header是否已在原数组中，若不存在，则添加，存在，则获取索引index
         guard let index = headers.index(of: header.name) else {
             headers.append(header)
             return
         }
-
+        //根据获取的索引值，更新原headers中的值
         headers.replaceSubrange(index...index, with: [header])
     }
 
@@ -84,6 +85,7 @@ public struct HTTPHeaders {
     ///
     /// - Parameter name: The name of the `HTTPHeader` to remove.
     public mutating func remove(name: String) {
+        //index(of:)是对[HttpHeader]增加的一个extension,方便查找第一个遇到的index
         guard let index = headers.index(of: name) else { return }
 
         headers.remove(at: index)
@@ -98,6 +100,7 @@ public struct HTTPHeaders {
     ///
     /// - Returns: A copy of the current instance sorted by name.
     public func sorted() -> HTTPHeaders {
+        //对现有header进行copy，并排序后返回
         var headers = self
         headers.sort()
 
@@ -118,6 +121,7 @@ public struct HTTPHeaders {
     /// Case-insensitively access the header with the given name.
     ///
     /// - Parameter name: The name of the header.
+    /// 支持通过请求头名字下标进行访问header，类似于数组通过索引进行访问
     public subscript(_ name: String) -> String? {
         get { value(for: name) }
         set {
@@ -134,7 +138,7 @@ public struct HTTPHeaders {
     /// This representation does not preserve the current order of the instance.
     public var dictionary: [String: String] {
         let namesAndValues = headers.map { ($0.name, $0.value) }
-
+        //创建字典时，遇到重复的键时，以第一个或者最后一个为准。
         return Dictionary(namesAndValues, uniquingKeysWith: { _, last in last })
     }
 }
@@ -208,7 +212,7 @@ extension HTTPHeader: CustomStringConvertible {
         "\(name): \(value)"
     }
 }
-
+///对HTTP常用的几个头字段封装成方法
 extension HTTPHeader {
     /// Returns an `Accept` header.
     ///
@@ -342,7 +346,7 @@ extension [HTTPHeader] {
 }
 
 // MARK: - Defaults
-
+//HTTPHeaders默认填充以下模式字段，acceptEncoing,acceptLanguage,userAgent
 extension HTTPHeaders {
     /// The default set of `HTTPHeaders` used by Alamofire. Includes `Accept-Encoding`, `Accept-Language`, and
     /// `User-Agent`.

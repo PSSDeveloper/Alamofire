@@ -1130,6 +1130,8 @@ extension [String] {
     }
 }
 
+
+///扩展CharacterSet，对RFC3986中的保留字符做区分
 extension CharacterSet {
     /// Creates a CharacterSet from RFC 3986 allowed characters.
     ///
@@ -1145,7 +1147,7 @@ extension CharacterSet {
         let generalDelimitersToEncode = ":#[]@" // does not include "?" or "/" due to RFC 3986 - Section 3.4
         let subDelimitersToEncode = "!$&'()*+,;="
         let encodableDelimiters = CharacterSet(charactersIn: "\(generalDelimitersToEncode)\(subDelimitersToEncode)")
-
+        ///返回除了RFC3986作为保留字符的那些字符串
         return CharacterSet.urlQueryAllowed.subtracting(encodableDelimiters)
     }()
 }

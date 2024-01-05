@@ -159,27 +159,32 @@ public struct URLEncoding: ParameterEncoding {
     }
 
     // MARK: Encoding
-
+    //此处进行编码工作，该方法定义在ParameterEncoding协议中
     public func encode(_ urlRequest: URLRequestConvertible, with parameters: Parameters?) throws -> URLRequest {
         var urlRequest = try urlRequest.asURLRequest()
 
         guard let parameters else { return urlRequest }
-
+        
+        ///如果是get，put，delete请求中的一种
         if let method = urlRequest.method, destination.encodesParametersInURL(for: method) {
             guard let url = urlRequest.url else {
                 throw AFError.parameterEncodingFailed(reason: .missingURL)
             }
 
             if var urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false), !parameters.isEmpty {
+                //先获取URL原有的查询字符串并在末尾添加&符号，方便后续添加其他查询字符串
                 let percentEncodedQuery = (urlComponents.percentEncodedQuery.map { $0 + "&" } ?? "") + query(parameters)
+                //对urlComponents的百分号转义属性进行赋值
                 urlComponents.percentEncodedQuery = percentEncodedQuery
+                //此处对url重新赋值是因为，将参数百分号转义后拼接在了原始url后，因此需重新赋值，否则没必要
                 urlRequest.url = urlComponents.url
             }
         } else {
+            //Content-Type请求头若缺失，则添加对应的头名称
             if urlRequest.headers["Content-Type"] == nil {
                 urlRequest.headers.update(.contentType("application/x-www-form-urlencoded; charset=utf-8"))
             }
-
+            //将url编码过后的数据，塞到httpBody中
             urlRequest.httpBody = Data(query(parameters).utf8)
         }
 
@@ -234,6 +239,7 @@ public struct URLEncoding: ParameterEncoding {
             let value = parameters[key]!
             components += queryComponents(fromKey: key, value: value)
         }
+        //将元组数组中的编码数据进行拼装,并用&连接起来
         return components.map { "\($0)=\($1)" }.joined(separator: "&")
     }
 }
@@ -273,7 +279,7 @@ public struct JSONEncoding: ParameterEncoding {
         var urlRequest = try urlRequest.asURLRequest()
 
         guard let parameters else { return urlRequest }
-
+        ///JSON序列化之前，首先验证参数是否为合法的JSON对象
         guard JSONSerialization.isValidJSONObject(parameters) else {
             throw AFError.parameterEncodingFailed(reason: .jsonEncodingFailed(error: Error.invalidJSONObject))
         }

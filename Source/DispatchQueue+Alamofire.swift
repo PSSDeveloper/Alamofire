@@ -31,6 +31,7 @@ extension DispatchQueue {
     /// - Parameters:
     ///   - delay:   `TimeInterval` to delay execution.
     ///   - closure: Closure to execute.
+    /// DispatchQueue的一个扩展，方便使用延时执行函数asyncAfter
     func after(_ delay: TimeInterval, execute closure: @escaping () -> Void) {
         asyncAfter(deadline: .now() + delay, execute: closure)
     }

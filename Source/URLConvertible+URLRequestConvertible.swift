@@ -23,7 +23,7 @@
 //
 
 import Foundation
-
+///定义URLConvertible协议，并让String，URL，URLComponents遵守该协议，以便可以快速转换成URL
 /// Types adopting the `URLConvertible` protocol can be used to construct `URL`s, which can then be used to construct
 /// `URLRequests`.
 public protocol URLConvertible {

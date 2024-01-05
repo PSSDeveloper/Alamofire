@@ -22,6 +22,14 @@
 //  THE SOFTWARE.
 //
 
+/***
+    思考此处HTTPMethod定义成Struct类型而不是Enum类型的原因？
+    灵活性，可扩展性，独立性
+    
+    HTTPMethod是区分大小写的，且遵循RawRepresentable,Equatable,Hashable协议
+ 
+ */
+
 /// Type representing HTTP methods. Raw `String` value is stored and compared case-sensitively, so
 /// `HTTPMethod.get != HTTPMethod(rawValue: "get")`.
 ///

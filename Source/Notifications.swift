@@ -23,7 +23,7 @@
 //
 
 import Foundation
-
+//对Request类扩展静态通知用常量
 extension Request {
     /// Posted when a `Request` is resumed. The `Notification` contains the resumed `Request`.
     public static let didResumeNotification = Notification.Name(rawValue: "org.alamofire.notification.name.request.didResume")
@@ -44,7 +44,7 @@ extension Request {
     public static let didCompleteTaskNotification = Notification.Name(rawValue: "org.alamofire.notification.name.request.didCompleteTask")
 }
 
-// MARK: -
+// MARK: -给系统Notification做扩展
 
 extension Notification {
     /// The `Request` contained by the instance's `userInfo`, `nil` otherwise.
@@ -57,6 +57,7 @@ extension Notification {
     /// - Parameters:
     ///   - name:    The name of the notification.
     ///   - request: The `Request` payload.
+    ///   构造出的便利初始化函数，传入通知名字和请求
     init(name: Notification.Name, request: Request) {
         self.init(name: name, object: nil, userInfo: [String.requestKey: request])
     }
@@ -80,6 +81,7 @@ extension String {
 }
 
 /// `EventMonitor` that provides Alamofire's notifications.
+/// EventMonitor是一个协议，包含所有的事件回调
 public final class AlamofireNotifications: EventMonitor {
     public func requestDidResume(_ request: Request) {
         NotificationCenter.default.postNotification(named: Request.didResumeNotification, with: request)

@@ -37,4 +37,5 @@ import Foundation
 public let AF = Session.default
 
 /// Current Alamofire version. Necessary since SPM doesn't use dynamic libraries. Plus this will be more accurate.
+/// 此字段用在构造默认HTTPHeaders的useragent位置处
 let version = "5.8.1"

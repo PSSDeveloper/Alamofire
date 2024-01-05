@@ -96,7 +96,7 @@ public protocol EventMonitor {
     /// Event called during `URLSessionDownloadDelegate`'s `urlSession(_:downloadTask:didFinishDownloadingTo:)` method.
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL)
 
-    // MARK: - Request Events
+    // MARK: - Request Events，自定义的Request相关的事件
 
     /// Event called when a `URLRequest` is first created for a `Request`. If a `RequestAdapter` is active, the
     /// `URLRequest` will be adapted before being issued.
@@ -313,15 +313,17 @@ extension EventMonitor {
 
 /// An `EventMonitor` which can contain multiple `EventMonitor`s and calls their methods on their queues.
 public final class CompositeEventMonitor: EventMonitor {
+    //事件监控队列,串行
     public let queue = DispatchQueue(label: "org.alamofire.compositeEventMonitor")
-
+    //定义monitors数组变量
     let monitors: [EventMonitor]
 
     init(monitors: [EventMonitor]) {
         self.monitors = monitors
     }
-
+    
     func performEvent(_ event: @escaping (EventMonitor) -> Void) {
+        ///串行队列异步执行，相当于在子线程中串行执行
         queue.async {
             for monitor in self.monitors {
                 monitor.queue.async { event(monitor) }

@@ -170,7 +170,7 @@ open class URLEncodedFormParameterEncoder: ParameterEncoder {
             let rawValue = request.method?.rawValue ?? "nil"
             throw AFError.parameterEncoderFailed(reason: .missingRequiredComponent(.httpMethod(rawValue: rawValue)))
         }
-
+        
         if destination.encodesParametersInURL(for: method),
            var components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
             let query: String = try Result<String, Error> { try encoder.encode(parameters) }
@@ -187,7 +187,6 @@ open class URLEncodedFormParameterEncoder: ParameterEncoder {
             if request.headers["Content-Type"] == nil {
                 request.headers.update(.contentType("application/x-www-form-urlencoded; charset=utf-8"))
             }
-
             request.httpBody = try Result<Data, Error> { try encoder.encode(parameters) }
                 .mapError { AFError.parameterEncoderFailed(reason: .encoderFailed(error: $0)) }.get()
         }

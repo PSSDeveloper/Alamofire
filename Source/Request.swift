@@ -27,6 +27,7 @@ import Foundation
 /// `Request` is the common superclass of all Alamofire request types and provides common state, delegate, and callback
 /// handling.
 public class Request {
+    ///定义Request的五种状态，且提供一个函数判断当前状态下能够转移到另外一个状态
     /// State of the `Request`, with managed transitions between states set when calling `resume()`, `suspend()`, or
     /// `cancel()` on the `Request`.
     public enum State {
@@ -369,12 +370,12 @@ public class Request {
 
         mutableState.write { state in
             state.tasks.append(task)
-
+            
             guard let urlSessionTaskHandler = state.urlSessionTaskHandler else { return }
-
+            
             urlSessionTaskHandler.queue.async { urlSessionTaskHandler.handler(task) }
         }
-
+        //eventMonitor回调成功创建task方法
         eventMonitor?.request(self, didCreateTask: task)
     }
 
@@ -723,7 +724,7 @@ public class Request {
             underlyingQueue.async { self.didResume() }
 
             guard let task = mutableState.tasks.last, task.state != .completed else { return }
-
+            ///网络请求最终被发出的逻辑代码
             task.resume()
             underlyingQueue.async { self.didResumeTask(task) }
         }
@@ -1185,7 +1186,7 @@ public class DataRequest: Request {
             }
         }
     }
-
+    ///根据Request创建DataTask任务
     override func task(for request: URLRequest, using session: URLSession) -> URLSessionTask {
         let copiedRequest = request
         return session.dataTask(with: copiedRequest)

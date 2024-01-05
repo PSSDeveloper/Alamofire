@@ -23,13 +23,16 @@
 //
 
 import Foundation
-
+///URLSessionConfiguration遵守AlamofireExtened协议，且协议已有默认实现
 extension URLSessionConfiguration: AlamofireExtended {}
+
+///对AlamofireExtension当泛型类型是URLSessionConfiguration时进行扩展，新增两个静态变量
 extension AlamofireExtension where ExtendedType: URLSessionConfiguration {
     /// Alamofire's default configuration. Same as `URLSessionConfiguration.default` but adds Alamofire default
     /// `Accept-Language`, `Accept-Encoding`, and `User-Agent` headers.
     public static var `default`: URLSessionConfiguration {
         let configuration = URLSessionConfiguration.default
+        //给configuration赋值默认的请求头，该headers通过extension添加上去
         configuration.headers = .default
 
         return configuration

@@ -29,6 +29,7 @@ import Foundation
 /// cache handling.
 open class Session {
     /// Shared singleton instance used by all `AF.request` APIs. Cannot be modified.
+    /// 定义一个单例对象default
     public static let `default` = Session()
 
     /// Underlying `URLSession` used to create `URLSessionTasks` for this instance, and for which this instance's
@@ -36,41 +37,55 @@ open class Session {
     ///
     /// - Note: This instance should **NOT** be used to interact with the underlying `URLSessionTask`s. Doing so will
     ///         break internal Alamofire logic that tracks those tasks.
-    ///
+    ///封装Apple提供的URLSession类
     public let session: URLSession
     /// Instance's `SessionDelegate`, which handles the `URLSessionDelegate` methods and `Request` interaction.
+    /// 封装了原生URLSessionDelegate的类
     public let delegate: SessionDelegate
     /// Root `DispatchQueue` for all internal callbacks and state update. **MUST** be a serial queue.
+    /// 所有内部回调和状态更新的DispatchQueue，且该队列必须是串行队列
     public let rootQueue: DispatchQueue
     /// Value determining whether this instance automatically calls `resume()` on all created `Request`s.
+    /// 是否在创建完Request后立即执行请求
     public let startRequestsImmediately: Bool
     /// `DispatchQueue` on which `URLRequest`s are created asynchronously. By default this queue uses `rootQueue` as its
     /// `target`, but a separate queue can be used if request creation is determined to be a bottleneck. Always profile
     /// and test before introducing an additional queue.
+    /// 异步的创建Request的队列
     public let requestQueue: DispatchQueue
     /// `DispatchQueue` passed to all `Request`s on which they perform their response serialization. By default this
     /// queue uses `rootQueue` as its `target` but a separate queue can be used if response serialization is determined
     /// to be a bottleneck. Always profile and test before introducing an additional queue.
+    /// 用于序列化操作的队列
     public let serializationQueue: DispatchQueue
     /// `RequestInterceptor` used for all `Request` created by the instance. `RequestInterceptor`s can also be set on a
     /// per-`Request` basis, in which case the `Request`'s interceptor takes precedence over this value.
+    /// 请求拦截器
     public let interceptor: RequestInterceptor?
     /// `ServerTrustManager` instance used to evaluate all trust challenges and provide certificate and key pinning.
+    /// 证书信任管理器
     public let serverTrustManager: ServerTrustManager?
     /// `RedirectHandler` instance used to provide customization for request redirection.
+    /// 重定向处理闭包
     public let redirectHandler: RedirectHandler?
     /// `CachedResponseHandler` instance used to provide customization of cached response handling.
+    /// 缓存响应对象
     public let cachedResponseHandler: CachedResponseHandler?
     /// `CompositeEventMonitor` used to compose Alamofire's `defaultEventMonitors` and any passed `EventMonitor`s.
+    ///合成的事件监控器
     public let eventMonitor: CompositeEventMonitor
     /// `EventMonitor`s included in all instances. `[AlamofireNotifications()]` by default.
+    /// 默认的事件监控器
     public let defaultEventMonitors: [EventMonitor] = [AlamofireNotifications()]
 
     /// Internal map between `Request`s and any `URLSessionTasks` that may be in flight for them.
+    /// 请求任务map,Request和URLSessionTask一一对应
     var requestTaskMap = RequestTaskMap()
     /// `Set` of currently active `Request`s.
+    /// 当前正在活跃的请求集合
     var activeRequests: Set<Request> = []
     /// Completion events awaiting `URLSessionTaskMetrics`.
+    ///已完成的event，等待收集URLSessionTaskMetrics
     var waitingCompletions: [URLSessionTask: () -> Void] = [:]
 
     /// Creates a `Session` from a `URLSession` and other parameters.
@@ -116,6 +131,7 @@ open class Session {
                 redirectHandler: RedirectHandler? = nil,
                 cachedResponseHandler: CachedResponseHandler? = nil,
                 eventMonitors: [EventMonitor] = []) {
+        //断言机制，对相关情况做判断过滤
         precondition(session.configuration.identifier == nil,
                      "Alamofire does not support background URLSessionConfigurations.")
         precondition(session.delegateQueue.underlyingQueue === rootQueue,
@@ -125,13 +141,17 @@ open class Session {
         self.delegate = delegate
         self.rootQueue = rootQueue
         self.startRequestsImmediately = startRequestsImmediately
+        ///给requestQueue赋值，是一个基于rootqueue的串行队列
         self.requestQueue = requestQueue ?? DispatchQueue(label: "\(rootQueue.label).requestQueue", target: rootQueue)
+        ///给serializationQueue赋值
         self.serializationQueue = serializationQueue ?? DispatchQueue(label: "\(rootQueue.label).serializationQueue", target: rootQueue)
         self.interceptor = interceptor
         self.serverTrustManager = serverTrustManager
         self.redirectHandler = redirectHandler
         self.cachedResponseHandler = cachedResponseHandler
+        ///给事件监控器赋值
         eventMonitor = CompositeEventMonitor(monitors: defaultEventMonitors + eventMonitors)
+        //对SessionDelegate的eventMonitor和stateProvider赋值
         delegate.eventMonitor = eventMonitor
         delegate.stateProvider = self
     }
@@ -170,7 +190,7 @@ open class Session {
     ///                               `nil` by default.
     ///   - eventMonitors:            Additional `EventMonitor`s used by the instance. Alamofire always adds a
     ///                               `AlamofireNotifications` `EventMonitor` to the array passed here. `[]` by default.
-    public convenience init(configuration: URLSessionConfiguration = URLSessionConfiguration.af.default,
+    public convenience init(configuration: URLSessionConfiguration = URLSessionConfiguration.af.default,//静态扩展点的使用之处
                             delegate: SessionDelegate = SessionDelegate(),
                             rootQueue: DispatchQueue = DispatchQueue(label: "org.alamofire.session.rootQueue"),
                             startRequestsImmediately: Bool = true,
@@ -182,13 +202,14 @@ open class Session {
                             cachedResponseHandler: CachedResponseHandler? = nil,
                             eventMonitors: [EventMonitor] = []) {
         precondition(configuration.identifier == nil, "Alamofire does not support background URLSessionConfigurations.")
-
         // Retarget the incoming rootQueue for safety, unless it's the main queue, which we know is safe.
         let serialRootQueue = (rootQueue === DispatchQueue.main) ? rootQueue : DispatchQueue(label: rootQueue.label,
                                                                                              target: rootQueue)
+        ///创建一个最大并发量为1，且基于serialRootQueue的一个操作队列
         let delegateQueue = OperationQueue(maxConcurrentOperationCount: 1, underlyingQueue: serialRootQueue, name: "\(serialRootQueue.label).sessionDelegate")
+        ///基于上述的configuration，queue，在此处构建URLSession对象
         let session = URLSession(configuration: configuration, delegate: delegate, delegateQueue: delegateQueue)
-
+        ///调用默认的init函数创建Session
         self.init(session: session,
                   delegate: delegate,
                   rootQueue: serialRootQueue,
@@ -202,6 +223,7 @@ open class Session {
                   eventMonitors: eventMonitors)
     }
 
+    ///session对象销毁时调用，析构函数
     deinit {
         finishRequestsForDeinit()
         session.invalidateAndCancel()
@@ -256,9 +278,11 @@ open class Session {
         let requestModifier: RequestModifier?
 
         func asURLRequest() throws -> URLRequest {
+            ///调用系统方法创建URLRequest对象
             var request = try URLRequest(url: url, method: method, headers: headers)
+            //提供对request改写的功能
             try requestModifier?(&request)
-
+            //对最终的request按照encoding指定的方式进行入参编码
             return try encoding.encode(request, with: parameters)
         }
     }
@@ -280,18 +304,23 @@ open class Session {
     /// - Returns:       The created `DataRequest`.
     open func request(_ convertible: URLConvertible,
                       method: HTTPMethod = .get,
+                      //Parameter是[String: Any]的一个别名
                       parameters: Parameters? = nil,
+                      //参数编码方式 ParameterEncoding是一个协议
                       encoding: ParameterEncoding = URLEncoding.default,
                       headers: HTTPHeaders? = nil,
+                      //RequestInterceptor是一个协议，包含adapt和retry
                       interceptor: RequestInterceptor? = nil,
+                      //RequestModifier是一个闭包，提供修改request的功能
                       requestModifier: RequestModifier? = nil) -> DataRequest {
+        ///构造RequestConvertible结构体
         let convertible = RequestConvertible(url: convertible,
                                              method: method,
                                              parameters: parameters,
                                              encoding: encoding,
                                              headers: headers,
                                              requestModifier: requestModifier)
-
+        //调用Session自身的方法创建DataRequest
         return request(convertible, interceptor: interceptor)
     }
 
@@ -351,13 +380,14 @@ open class Session {
     ///
     /// - Returns:       The created `DataRequest`.
     open func request(_ convertible: URLRequestConvertible, interceptor: RequestInterceptor? = nil) -> DataRequest {
+        //创建DataRequest
         let request = DataRequest(convertible: convertible,
                                   underlyingQueue: rootQueue,
                                   serializationQueue: serializationQueue,
                                   eventMonitor: eventMonitor,
                                   interceptor: interceptor,
                                   delegate: self)
-
+        //执行请求
         perform(request)
 
         return request
@@ -1058,13 +1088,16 @@ open class Session {
     ///
     /// - Parameter request: The `Request` to perform.
     func perform(_ request: Request) {
+        ///在rootQueue串行队列上，异步执行请求
         rootQueue.async {
+            //盘点该请求是否被取消
             guard !request.isCancelled else { return }
-
+            //将该request插入到activeRequests数组中
             self.activeRequests.insert(request)
-
+            //在请求队列上异步执行-----???为什么先在rootQueue上异步执行，然后再在requestQueue上异步执行呢？
             self.requestQueue.async {
                 // Leaf types must come first, otherwise they will cast as their superclass.
+                ///进行Request的类型转换，执行对应的具体request
                 switch request {
                 case let r as UploadRequest: self.performUploadRequest(r) // UploadRequest must come before DataRequest due to subtype relationship.
                 case let r as DataRequest: self.performDataRequest(r)
@@ -1086,7 +1119,9 @@ open class Session {
         }
     }
 
+    ///执行DataRequest类型的请求
     func performDataRequest(_ request: DataRequest) {
+        ///判断是否在requestQueue上执行代码
         dispatchPrecondition(condition: .onQueue(requestQueue))
 
         performSetupOperations(for: request, convertible: request.convertible)
@@ -1133,40 +1168,42 @@ open class Session {
         }
     }
 
+    ///执行请求发出前的准备操作
     func performSetupOperations(for request: Request,
                                 convertible: URLRequestConvertible,
                                 shouldCreateTask: @escaping () -> Bool = { true }) {
         dispatchPrecondition(condition: .onQueue(requestQueue))
-
+        //记录初始的请求request
         let initialRequest: URLRequest
-
+        ///利用入参转换成URLRequest，并做get请求，httpbody不能有数据的验证
         do {
             initialRequest = try convertible.asURLRequest()
             try initialRequest.validate()
         } catch {
+            ///URLRequest生成失败，在rootQueue上调用相应的方法回调
             rootQueue.async { request.didFailToCreateURLRequest(with: error.asAFError(or: .createURLRequestFailed(error: error))) }
             return
         }
-
+        //Request创建成功,回调相关函数
         rootQueue.async { request.didCreateInitialURLRequest(initialRequest) }
-
+        ///再次判断该请求是否被取消操作
         guard !request.isCancelled else { return }
-
+        //创建adapter
         guard let adapter = adapter(for: request) else {
             guard shouldCreateTask() else { return }
             rootQueue.async { self.didCreateURLRequest(initialRequest, for: request) }
             return
         }
-
+        ///存储与正在调整的“URLRequest”关联的所有状态。
         let adapterState = RequestAdapterState(requestID: request.id, session: self)
-
+        ///
         adapter.adapt(initialRequest, using: adapterState) { result in
             do {
                 let adaptedRequest = try result.get()
                 try adaptedRequest.validate()
 
                 self.rootQueue.async { request.didAdaptInitialRequest(initialRequest, to: adaptedRequest) }
-
+                //执行创建Task的block
                 guard shouldCreateTask() else { return }
 
                 self.rootQueue.async { self.didCreateURLRequest(adaptedRequest, for: request) }
@@ -1184,8 +1221,9 @@ open class Session {
         request.didCreateURLRequest(urlRequest)
 
         guard !request.isCancelled else { return }
-
+        //调用子类的task方法，创建dataTask对象
         let task = request.task(for: urlRequest, using: session)
+        //将task与request保存在Map中，一一对应
         requestTaskMap[request] = task
         request.didCreateTask(task)
 
@@ -1204,6 +1242,7 @@ open class Session {
         updateStatesForTask(task, request: request)
     }
 
+    ///这里是真正发出网络请求的地点，对URLSessionTask的子类，调用resume()方法
     func updateStatesForTask(_ task: URLSessionTask, request: Request) {
         dispatchPrecondition(condition: .onQueue(rootQueue))
 
@@ -1230,6 +1269,7 @@ open class Session {
     // MARK: - Adapters and Retriers
 
     func adapter(for request: Request) -> RequestAdapter? {
+        ///判断request以及是否提供adapter
         if let requestInterceptor = request.interceptor, let sessionInterceptor = interceptor {
             return Interceptor(adapters: [requestInterceptor, sessionInterceptor])
         } else {

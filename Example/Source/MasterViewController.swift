@@ -57,6 +57,8 @@ class MasterViewController: UITableViewController {
                 switch segue.identifier! {
                 case "GET":
                     detailViewController.segueIdentifier = "GET"
+                    //AF是在Alamofire文件中声明的一个对Session.default引用的常量
+                    //AF即是Session.default,default是一个单例，是对Session()的引用
                     return AF.request("https://httpbin.org/get")
                 case "POST":
                     detailViewController.segueIdentifier = "POST"
